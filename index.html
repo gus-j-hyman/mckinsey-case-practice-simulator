@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>McKinsey Style Case Bot</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -12,13 +13,7 @@
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        mckinsey: {
-                            navy: '#051c2c',
-                            blue: '#005f9e',
-                            lightBg: '#f4f6f8',
-                            slate: '#334155',
-                            accent: '#e06b20'
-                        }
+                        mckinsey: { navy: '#051c2c', blue: '#005f9e', slate: '#334155', accent: '#e06b20' }
                     }
                 }
             }
@@ -27,35 +22,31 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f4f6f8; }
         .reveal-content { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .reveal-content.open { max-height: 2500px; }
-        .markdown-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 1rem; font-size: 0.875rem; }
-        .markdown-table th { background-color: #051c2c; color: white; padding: 0.75rem; text-align: left; border: 1px solid #e2e8f0; font-weight: 600; }
-        .markdown-table td { padding: 0.75rem; border: 1px solid #e2e8f0; color: #334155; }
-        .markdown-table tr:nth-child(even) { background-color: #f8fafc; }
+        .reveal-content.open { max-height: 2500px; padding-top: 1rem; padding-bottom: 1rem; }
     </style>
 </head>
 <body class="text-gray-900 antialiased flex flex-col min-h-screen bg-[#f4f6f8]">
 
-    <nav class="bg-[#051c2c] text-white py-4 px-6 border-b border-gray-800 shadow-md sticky top-0 z-50">
+    <nav class="bg-mckinsey-navy text-white py-4 px-6 border-b border-gray-800 shadow-md sticky top-0 z-50">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <div class="w-3 h-6 bg-[#005f9e]"></div>
+                <div class="w-3 h-6 bg-mckinsey-blue"></div>
                 <span class="text-sm font-bold uppercase tracking-widest text-gray-100">McKinsey Style Case Bot</span>
             </div>
-            <span class="text-xs font-mono text-[#005f9e] bg-slate-900/80 px-3 py-1 rounded border border-slate-800 font-semibold">AI Deployment Environment</span>
+            <span class="text-xs font-mono text-mckinsey-blue bg-slate-900/80 px-3 py-1 rounded border border-slate-800 font-semibold">AI Deployment Environment</span>
         </div>
     </nav>
 
     <header class="max-w-5xl w-full mx-auto mt-8 px-4">
         <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-            <h1 class="text-lg font-bold text-[#051c2c] mb-4 flex items-center">
-                <span class="w-2 h-2 bg-[#005f9e] rounded-full mr-2"></span>
+            <h1 class="text-lg font-bold text-mckinsey-navy mb-4 flex items-center">
+                <span class="w-2 h-2 bg-mckinsey-blue rounded-full mr-2"></span>
                 Case Strategy Parameters
             </h1>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">Target Industry Vertical</label>
-                    <select id="industry-select" class="w-full bg-white border border-gray-300 rounded p-2.5 text-sm font-medium text-gray-800 focus:ring-1 focus:ring-[#005f9e] outline-none cursor-pointer">
+                    <select id="industry-select" class="w-full bg-white border border-gray-300 rounded p-2.5 text-sm font-medium text-gray-800 focus:ring-1 focus:ring-mckinsey-blue outline-none cursor-pointer">
                         <option value="Aerospace & Defense">Aerospace & Defense</option>
                         <option value="Automotive & Assembly">Automotive & Assembly</option>
                         <option value="Advanced Electronics">Advanced Electronics</option>
@@ -91,7 +82,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">Strategic Case Type</label>
-                    <select id="type-select" class="w-full bg-white border border-gray-300 rounded p-2.5 text-sm font-medium text-gray-800 focus:ring-1 focus:ring-[#005f9e] outline-none cursor-pointer">
+                    <select id="type-select" class="w-full bg-white border border-gray-300 rounded p-2.5 text-sm font-medium text-gray-800 focus:ring-1 focus:ring-mckinsey-blue outline-none cursor-pointer">
                         <option value="Market Entry Strategy">Market Entry Strategy</option>
                         <option value="New Product/Service Launch">New Product/Service Launch</option>
                         <option value="Profitability Optimization (Revenue Side)">Profitability Optimization (Revenue Side)</option>
@@ -110,7 +101,7 @@
                     </select>
                 </div>
                 <div class="flex items-end">
-                    <button onclick="executeCaseGenerationEngine()" class="w-full bg-[#005f9e] hover:bg-blue-800 text-white font-semibold text-xs py-3 px-4 rounded shadow-sm transition duration-150 uppercase tracking-widest">
+                    <button onclick="executeCaseGenerationEngine()" class="w-full bg-mckinsey-blue hover:bg-blue-800 text-white font-semibold text-xs py-3 px-4 rounded shadow-sm transition duration-150 uppercase tracking-widest">
                         Generate Custom Case Model
                     </button>
                 </div>
@@ -122,6 +113,8 @@
         </main>
 
     <script>
+        let globalChartInstance = null;
+
         function toggleAnswerContainer(id) {
             const content = document.getElementById(id);
             const indicator = document.getElementById('ind-' + id);
@@ -139,38 +132,39 @@
             const caseType = document.getElementById('type-select').value;
             const workspace = document.getElementById('workspace');
             
-            workspace.classList.remove('hidden');
-            const payload = generateCaseJSON(industry, caseType);
+            if (globalChartInstance) { 
+                globalChartInstance.destroy(); 
+                globalChartInstance = null;
+            }
             
-            let tableRows = payload.questions[2].dataExhibit.rows.map(row => 
-                `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`
-            ).join('');
-
+            workspace.classList.remove('hidden');
+            const data = generateCasePayload(industry, caseType);
+            
             workspace.innerHTML = `
                 <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-8 overflow-hidden">
-                    <div class="bg-[#051c2c] text-white p-6 border-b border-gray-800">
-                        <span class="text-xs font-bold uppercase tracking-widest text-[#005f9e] block mb-1">${payload.caseMetadata.industry} | ${payload.caseMetadata.caseType}</span>
-                        <h2 class="text-3xl font-bold tracking-tight">${payload.caseMetadata.brandName}</h2>
+                    <div class="bg-mckinsey-navy text-white p-6 border-b border-gray-800">
+                        <span class="text-xs font-bold uppercase tracking-widest text-mckinsey-blue block mb-1">${data.industry} | ${data.caseType}</span>
+                        <h2 class="text-3xl font-bold tracking-tight">${data.brandName}</h2>
                     </div>
                     <div class="p-8 space-y-6">
                         <div>
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-[#051c2c] mb-1">Client Goal</h3>
-                            <p class="text-base font-semibold text-gray-900">${payload.openingAct.clientGoal}</p>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-mckinsey-navy mb-1">Client Goal</h3>
+                            <p class="text-base font-semibold text-gray-900">${data.clientGoal}</p>
                         </div>
                         <hr class="border-gray-100" />
                         <div>
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-[#051c2c] mb-2">Situation Description</h3>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-mckinsey-navy mb-2">Situation Description</h3>
                             <div class="text-sm text-gray-700 leading-relaxed space-y-4">
-                                <p>${payload.openingAct.situationDescription.paragraph1}</p>
-                                <p>${payload.openingAct.situationDescription.paragraph2}</p>
-                                <p>${payload.openingAct.situationDescription.paragraph3}</p>
+                                <p>${data.p1}</p>
+                                <p>${data.p2}</p>
+                                <p>${data.p3}</p>
                             </div>
                         </div>
                         <hr class="border-gray-100" />
                         <div>
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-[#051c2c] mb-2">McKinsey Study</h3>
-                            <div class="bg-slate-50 border-l-4 border-[#051c2c] p-4 text-sm font-medium text-[#051c2c] italic rounded-r">
-                                ${payload.openingAct.mckinseyStudy}
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-mckinsey-navy mb-2">McKinsey Study</h3>
+                            <div class="bg-slate-50 border-l-4 border-mckinsey-navy p-4 text-sm font-medium text-mckinsey-navy italic rounded-r">
+                                ${data.mckinseyStudy}
                             </div>
                         </div>
                     </div>
@@ -178,28 +172,27 @@
 
                 <div class="text-center mb-8">
                     <h2 class="text-xl font-bold text-gray-800 uppercase tracking-widest">Practice Case Questions</h2>
-                    <div class="w-16 h-1 bg-[#005f9e] mx-auto mt-3"></div>
+                    <div class="w-16 h-1 bg-mckinsey-blue mx-auto mt-3"></div>
                 </div>
 
                 <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-8 overflow-hidden">
                     <div class="p-6 border-b border-gray-100 bg-slate-50/50">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question ${payload.questions[0].questionNumber}: ${payload.questions[0].type}</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question 1: Structuring</span>
                     </div>
                     <div class="p-8">
-                        <h3 class="text-lg font-bold text-[#051c2c] mb-6">${payload.questions[0].prompt}</h3>
-                        <button onclick="toggleAnswerContainer('ans-1')" class="w-full flex justify-between items-center border border-gray-200 rounded p-4 text-sm font-semibold text-[#005f9e] hover:bg-slate-50 transition bg-white shadow-sm">
+                        <h3 class="text-lg font-bold text-mckinsey-navy mb-6">${data.q1.prompt}</h3>
+                        <button onclick="toggleAnswerContainer('ans-1')" class="w-full flex justify-between items-center border border-gray-200 rounded p-4 text-sm font-semibold text-mckinsey-blue hover:bg-slate-50 transition bg-white shadow-sm">
                             <span>Reveal Ideal Answer Rubric</span>
                             <span id="ind-ans-1" class="text-xs font-mono">&#9662;</span>
                         </button>
                         <div id="ans-1" class="reveal-content bg-white">
-                            <div class="p-6 mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-4">
-                                <p class="text-xs text-gray-500 uppercase tracking-widest border-b pb-2">Custom MECE Architecture:</p>
+                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    ${Object.values(payload.questions[0].idealAnswerRubric).map(pillar => `
+                                    ${data.q1.pillars.map(p => `
                                         <div>
-                                            <h4 class="font-bold text-[#005f9e] mb-2 border-b border-blue-100 pb-1">${pillar.title}</h4>
+                                            <h4 class="font-bold text-mckinsey-blue mb-2 border-b border-blue-100 pb-1">${p.title}</h4>
                                             <ul class="list-disc pl-4 space-y-1 text-xs text-slate-700">
-                                                ${pillar.subMetrics.map(metric => `<li>${metric}</li>`).join('')}
+                                                ${p.bullets.map(b => `<li>${b}</li>`).join('')}
                                             </ul>
                                         </div>
                                     `).join('')}
@@ -211,26 +204,24 @@
 
                 <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-8 overflow-hidden">
                     <div class="p-6 border-b border-gray-100 bg-slate-50/50">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question ${payload.questions[1].questionNumber}: ${payload.questions[1].type}</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question 2: Quantitative Analysis</span>
                     </div>
                     <div class="p-8">
-                        <div class="text-lg font-bold text-[#051c2c] mb-4 space-y-3">${payload.questions[1].prompt}</div>
-                        <button onclick="toggleAnswerContainer('ans-2')" class="w-full flex justify-between items-center border border-gray-200 rounded p-4 text-sm font-semibold text-[#005f9e] hover:bg-slate-50 transition bg-white shadow-sm">
-                            <span>Reveal Ideal Answer & Calculations</span>
+                        <div class="text-lg font-bold text-mckinsey-navy mb-4 space-y-3">${data.q2.prompt}</div>
+                        <div class="mb-6 p-3 bg-blue-50 border border-blue-100 text-mckinsey-blue text-xs font-semibold rounded">
+                            Helpful hint: Calculators are not allowed—you may want to write out your calculations on paper.
+                        </div>
+                        <button onclick="toggleAnswerContainer('ans-2')" class="w-full flex justify-between items-center border border-gray-200 rounded p-4 text-sm font-semibold text-mckinsey-blue hover:bg-slate-50 transition bg-white shadow-sm">
+                            <span>Reveal Calculation Steps</span>
                             <span id="ind-ans-2" class="text-xs font-mono">&#9662;</span>
                         </button>
                         <div id="ans-2" class="reveal-content bg-white">
-                            <div class="p-6 mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-4">
-                                <p class="text-xs text-gray-500 uppercase tracking-widest border-b pb-2">Mathematical Formulation:</p>
-                                <div class="font-mono bg-gray-100 p-3 rounded text-xs space-y-1 text-slate-800">
-                                    ${payload.questions[1].mathematicalFormulas.map(form => `<p>${form}</p>`).join('')}
-                                </div>
-                                <p class="text-xs text-gray-500 uppercase tracking-widest border-b pb-2 mt-4">Execution Steps:</p>
+                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-4">
                                 <ul class="list-decimal pl-5 space-y-2 text-sm text-slate-700">
-                                    ${payload.questions[1].calculationSteps.map(step => `<li>${step}</li>`).join('')}
+                                    ${data.q2.steps.map(s => `<li>${s}</li>`).join('')}
                                 </ul>
-                                <div class="mt-4 p-4 bg-[#051c2c] text-white font-bold rounded">
-                                    Final Answer: ${payload.questions[1].correctAnswerWithUnits}
+                                <div class="mt-4 p-4 bg-mckinsey-navy text-white font-bold rounded">
+                                    ${data.q2.answer}
                                 </div>
                             </div>
                         </div>
@@ -239,42 +230,24 @@
 
                 <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-8 overflow-hidden">
                     <div class="p-6 border-b border-gray-100 bg-slate-50/50">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question ${payload.questions[2].questionNumber}: ${payload.questions[2].type}</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question 3: Data Interpretation</span>
                     </div>
                     <div class="p-8">
-                        <h3 class="text-lg font-bold text-[#051c2c] mb-6">${payload.questions[2].prompt}</h3>
-                        
-                        <div class="overflow-x-auto">
-                            <table class="markdown-table">
-                                <thead>
-                                    <tr>
-                                        ${payload.questions[2].dataExhibit.headers.map(h => `<th>${h}</th>`).join('')}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${tableRows}
-                                </tbody>
-                            </table>
+                        <h3 class="text-lg font-bold text-mckinsey-navy mb-6">${data.q3.prompt}</h3>
+                        <div class="w-full bg-white p-6 rounded border border-gray-200 shadow-inner mb-6">
+                            <div class="w-full h-[380px] relative">
+                                <canvas id="canvasRenderZone"></canvas>
+                            </div>
                         </div>
-
-                        <button onclick="toggleAnswerContainer('ans-3')" class="w-full flex justify-between items-center border border-gray-200 rounded p-4 text-sm font-semibold text-[#005f9e] hover:bg-slate-50 transition bg-white shadow-sm mt-4">
-                            <span>Reveal Data Synthesis & Insights</span>
+                        <button onclick="toggleAnswerContainer('ans-3')" class="w-full flex justify-between items-center border border-gray-200 rounded p-4 text-sm font-semibold text-mckinsey-blue hover:bg-slate-50 transition bg-white shadow-sm">
+                            <span>Reveal Data Insights</span>
                             <span id="ind-ans-3" class="text-xs font-mono">&#9662;</span>
                         </button>
                         <div id="ans-3" class="reveal-content bg-white">
-                            <div class="p-6 mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-4">
-                                <div>
-                                    <h4 class="font-bold text-red-600 mb-1">Red Herring Identified:</h4>
-                                    <p>${payload.questions[2].analyticalInsights.redHerringIdentified}</p>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-[#e06b20] mb-1">Hidden Correlation:</h4>
-                                    <p>${payload.questions[2].analyticalInsights.hiddenCorrelation}</p>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-[#005f9e] mb-1">Core Strategic Takeaway:</h4>
-                                    <p>${payload.questions[2].analyticalInsights.coreTakeaway}</p>
-                                </div>
+                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-4">
+                                <div><h4 class="font-bold text-red-600 mb-1">Red Herring Identified:</h4><p>${data.q3.redHerring}</p></div>
+                                <div><h4 class="font-bold text-mckinsey-accent mb-1">Hidden Correlation:</h4><p>${data.q3.correlation}</p></div>
+                                <div><h4 class="font-bold text-mckinsey-blue mb-1">Core Takeaway:</h4><p>${data.q3.takeaway}</p></div>
                             </div>
                         </div>
                     </div>
@@ -282,21 +255,21 @@
 
                 <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-8 overflow-hidden">
                     <div class="p-6 border-b border-gray-100 bg-slate-50/50">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question ${payload.questions[3].questionNumber}: ${payload.questions[3].type}</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question 4: Strategic Pivot</span>
                     </div>
                     <div class="p-8">
-                        <h3 class="text-lg font-bold text-[#051c2c] mb-6">${payload.questions[3].prompt}</h3>
-                        <button onclick="toggleAnswerContainer('ans-4')" class="w-full flex justify-between items-center border border-gray-200 rounded p-4 text-sm font-semibold text-[#005f9e] hover:bg-slate-50 transition bg-white shadow-sm">
-                            <span>Reveal Executive Mitigation Rubric</span>
+                        <h3 class="text-lg font-bold text-mckinsey-navy mb-6">${data.q4.prompt}</h3>
+                        <button onclick="toggleAnswerContainer('ans-4')" class="w-full flex justify-between items-center border border-gray-200 rounded p-4 text-sm font-semibold text-mckinsey-blue hover:bg-slate-50 transition bg-white shadow-sm">
+                            <span>Reveal Brainstorming Strategy</span>
                             <span id="ind-ans-4" class="text-xs font-mono">&#9662;</span>
                         </button>
                         <div id="ans-4" class="reveal-content bg-white">
-                            <div class="p-6 mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-6">
-                                ${Object.keys(payload.questions[3].brainstormingRubric).map(theme => `
+                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-6">
+                                ${data.q4.rubric.map(r => `
                                     <div>
-                                        <h4 class="font-bold text-[#051c2c] uppercase tracking-wider text-xs mb-2 border-b pb-1">${theme}</h4>
+                                        <h4 class="font-bold text-mckinsey-navy uppercase tracking-wider text-xs mb-2 border-b pb-1">${r.theme}</h4>
                                         <ul class="list-disc pl-5 space-y-1 text-slate-700">
-                                            ${payload.questions[3].brainstormingRubric[theme].map(item => `<li>${item}</li>`).join('')}
+                                            ${r.bullets.map(b => `<li>${b}</li>`).join('')}
                                         </ul>
                                     </div>
                                 `).join('')}
@@ -306,156 +279,313 @@
                 </div>
             `;
 
+            renderDynamicChart(data.chart.type, data.chart.config);
             workspace.scrollIntoView({ behavior: 'smooth' });
         }
 
-        function generateCaseJSON(industry, caseType) {
-            const prefixes = ['Aethel', 'Velo', 'Nexa', 'Terra', 'Omni', 'Quantum', 'Lumina', 'Aero', 'Zephyr', 'Synapse', 'Calyx', 'Valiant'];
-            const suffixes = ['Corp', 'Strat', 'Pharma', 'Lumen', 'Systems', 'Dynamics', 'Logistics', 'Networks', 'Tech', 'Holdings', 'Industries'];
-            const brandName = prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)];
+        // --- DYNAMIC MULTI-FORMAT CHART ENGINE ---
+        function renderDynamicChart(type, config) {
+            const ctx = document.getElementById('canvasRenderZone').getContext('2d');
+            
+            let chartJsConfig = {
+                plugins: [{
+                    beforeDraw: (chart) => {
+                        const cCtx = chart.ctx;
+                        cCtx.save();
+                        cCtx.fillStyle = '#ffffff';
+                        cCtx.fillRect(0, 0, chart.width, chart.height);
+                        cCtx.restore();
+                    }
+                }],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: config.title, color: '#051c2c', font: { family: 'Inter', size: 14, weight: '700' }, padding: { bottom: 20 } },
+                        legend: { display: true, position: 'bottom', labels: { font: { family: 'Inter', size: 11, weight: '500' }, color: '#334155' } }
+                    }
+                }
+            };
 
-            const sponsors = ['VP of Global Procurement', 'Chief Risk Officer', 'Head of Network Distribution', 'Chief Supply Chain Officer', 'EVP of Corporate Strategy', 'Chief Financial Officer', 'Head of Digital Transformation'];
-            const executiveSponsor = sponsors[Math.floor(Math.random() * sponsors.length)];
-
-            const complications = [
-                "localized protectionist regulatory changes restricting cross-border material flows",
-                "a structural shift to open-source alternatives cannibalizing core proprietary margins",
-                "a rapid digital channel migration creating extreme latency in their legacy ERP networks",
-                "fragmented multi-tiered supply chains collapsing under new geopolitical tariffs"
-            ];
-            const macroComplication = complications[Math.floor(Math.random() * complications.length)];
-
-            // Mathematical Targets (A, B, C, D)
-            const mathTypes = ['Net Present Value', 'Capacity Bottlenecks', 'Total Cost of Ownership', 'Market Share Thresholds'];
-            const targetMath = mathTypes[Math.floor(Math.random() * mathTypes.length)];
-
-            let mathData = {};
-            if (targetMath === 'Capacity Bottlenecks') {
-                const totalDemand = Math.floor(Math.random() * 5 + 10) * 100; // 1000M - 1500M
-                const currentCap = totalDemand - 400; 
-                mathData = {
-                    prompt: `<p>The client faces immediate constraints. Total macro demand for the upcoming fiscal year is projected at ${totalDemand} Million units. Their existing facility network currently has a theoretical maximum output of ${currentCap} Million units.</p><p>To close the gap, they are evaluating an upgrade to "Facility Charlie", which currently processes 200 Million units annually. By what exact percentage must Facility Charlie increase its throughput to independently cover the entire global capacity shortfall?</p><p class="mt-4 italic font-semibold text-gray-600">Helpful hint: Calculators are not allowed—you may want to write out your calculations on paper.</p>`,
-                    formulas: ["Shortfall = Total Demand - Current Capacity", "Required % Increase = (Shortfall / Facility Charlie Current Capacity) * 100"],
-                    steps: [
-                        `Calculate total unit shortfall: ${totalDemand}M - ${currentCap}M = 400M units.`,
-                        `Identify target asset baseline: Facility Charlie = 200M units.`,
-                        `Calculate percentage increase required: (400M / 200M) * 100.`
-                    ],
-                    answer: "200% Output Increase Required"
-                };
-            } else if (targetMath === 'Total Cost of Ownership') {
-                const legacyLabor = Math.floor(Math.random() * 4 + 4) * 50; // 200 to 400 Million
-                const tariffImpact = 150;
-                mathData = {
-                    prompt: `<p>Evaluating a cross-border asset reallocation, the client spends $${legacyLabor} Million annually in legacy domestic labor. Moving operations offshore will reduce base labor costs by 40%.</p><p>However, this triggers localized logistics tariffs amounting to a flat $${tariffImpact} Million annually. Factoring in both variables, what is the net annual financial impact (positive or negative) of this transition?</p><p class="mt-4 italic font-semibold text-gray-600">Helpful hint: Calculators are not allowed—you may want to write out your calculations on paper.</p>`,
-                    formulas: ["New Labor Cost = Legacy Labor * (1 - 0.40)", "Net Transition Cost = New Labor Cost + Flat Tariff", "Financial Impact = Legacy Labor - Net Transition Cost"],
-                    steps: [
-                        `Calculate 40% labor reduction: 0.40 * $${legacyLabor}M = $${legacyLabor * 0.4}M in savings.`,
-                        `Compare labor savings against the new tariff penalty: $${legacyLabor * 0.4}M savings vs $${tariffImpact}M tariffs.`,
-                        `Subtract the penalty from the savings to find the net yield.`
-                    ],
-                    answer: `Net Impact: ${ (legacyLabor * 0.4) > tariffImpact ? "Positive" : "Negative" } $${Math.abs((legacyLabor * 0.4) - tariffImpact)} Million`
-                };
-            } else {
-                // Default fallback to Market Share
-                const totalMarket = 2500; // $2.5B
-                const targetedShare = 20; // 20%
-                mathData = {
-                    prompt: `<p>A localized competitor price war requires a defensive volume strategy. The total regional market capitalization is $${totalMarket} Million. To retain pricing power, the client must hold exactly ${targetedShare}% of the market value.</p><p>If the average customer lifetime value (LTV) across this segment is fixed at $500, exactly how many active customers must the client maintain to successfully hit their defensive threshold?</p><p class="mt-4 italic font-semibold text-gray-600">Helpful hint: Calculators are not allowed—you may want to write out your calculations on paper.</p>`,
-                    formulas: ["Required Market Value = Total Market * Target Percentage", "Required Customers = Required Market Value / LTV"],
-                    steps: [
-                        `Calculate the defensive financial threshold: $${totalMarket}M * 0.20 = $${totalMarket * 0.2}M.`,
-                        `Divide the required financial threshold by the individual LTV metric: $${totalMarket * 0.2}M / $500.`,
-                        `Convert millions cleanly to absolute integers.`
-                    ],
-                    answer: `${(totalMarket * 0.2 * 1000000 / 500).toLocaleString()} Active Customers`
-                };
+            switch(type) {
+                case 'waterfall':
+                    chartJsConfig.type = 'bar';
+                    chartJsConfig.data = config.data;
+                    chartJsConfig.options.scales = { y: { title: { display: true, text: 'Variance Impact' } } };
+                    break;
+                case 'bubble':
+                    chartJsConfig.type = 'bubble';
+                    chartJsConfig.data = config.data;
+                    chartJsConfig.options.scales = { x: { title: { display: true, text: config.xTitle } }, y: { title: { display: true, text: config.yTitle } } };
+                    break;
+                case 'inverted':
+                    chartJsConfig.type = 'line';
+                    chartJsConfig.data = config.data;
+                    chartJsConfig.options.scales = { y: { reverse: true, title: { display: true, text: 'Regression Metric (Lower is Optimal)' } } };
+                    break;
+                case 'dualAxis':
+                    chartJsConfig.type = 'bar';
+                    chartJsConfig.data = config.data;
+                    chartJsConfig.options.scales = { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } };
+                    break;
+                case 'stackedBar100':
+                    chartJsConfig.type = 'bar';
+                    chartJsConfig.data = config.data;
+                    chartJsConfig.options.scales = { x: { stacked: true }, y: { stacked: true, max: 100, title: { display: true, text: '% Distribution' } } };
+                    break;
+                case 'radar':
+                    chartJsConfig.type = 'radar';
+                    chartJsConfig.data = config.data;
+                    break;
+                case 'scatter':
+                    chartJsConfig.type = 'scatter';
+                    chartJsConfig.data = config.data;
+                    chartJsConfig.options.scales = { x: { title: { display: true, text: config.xTitle } }, y: { title: { display: true, text: config.yTitle } } };
+                    break;
+                case 'stepline':
+                    chartJsConfig.type = 'line';
+                    config.data.datasets.forEach(ds => ds.stepped = true);
+                    chartJsConfig.data = config.data;
+                    break;
+                case 'polarArea':
+                    chartJsConfig.type = 'polarArea';
+                    chartJsConfig.data = config.data;
+                    break;
+                case 'doughnut':
+                    chartJsConfig.type = 'doughnut';
+                    chartJsConfig.data = config.data;
+                    break;
+                case 'area':
+                    chartJsConfig.type = 'line';
+                    config.data.datasets.forEach(ds => ds.fill = true);
+                    chartJsConfig.data = config.data;
+                    break;
+                case 'line':
+                case 'bar':
+                case 'groupedBar':
+                    chartJsConfig.type = type === 'line' ? 'line' : 'bar';
+                    chartJsConfig.data = config.data;
+                    break;
+                case 'mixed':
+                    chartJsConfig.type = 'bar';
+                    chartJsConfig.data = config.data;
+                    break;
+                default:
+                    chartJsConfig.type = 'bar';
+                    chartJsConfig.data = config.data;
             }
 
+            globalChartInstance = new Chart(ctx, chartJsConfig);
+        }
+
+        // --- PROCEDURAL CASE ENGINE ---
+        function generateCasePayload(industry, caseType) {
+            // 1. BRANDING & DEMOGRAPHICS
+            const prefixes = ['Aethel', 'Velo', 'Nexa', 'Terra', 'Omni', 'Quantum', 'Lumina', 'Aero', 'Zephyr', 'Synapse', 'Calyx', 'Valiant', 'Strata', 'Equinox', 'Pinnacle'];
+            const suffixes = ['Corp', 'Strat', 'Pharma', 'Lumen', 'Systems', 'Dynamics', 'Logistics', 'Networks', 'Tech', 'Holdings', 'Industries', 'Solutions', 'Global'];
+            const brandName = prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)];
+
+            // 2. TIMELINES & METRICS
+            const timelines = ['9 months', '14 weeks', '3 quarters', '18 months', 'the next fiscal half', '120 days'];
+            const metricsList = ['EBITDA margin degradation', 'logistics yield constraints', 'customer acquisition cost inflation', 'supply chain capacity ceilings', 'operating expenditure burn rate'];
+            const randomMetric = metricsList[Math.floor(Math.random() * metricsList.length)];
+            const randomVar = [14, 18, 22, 35, 40][Math.floor(Math.random() * 5)];
+            const bigNumber = [150, 400, 850, 1200][Math.floor(Math.random() * 4)];
+            
+            // 3. THEMATIC PATHWAY ENGINE
+            const themes = [
+                { id: 'TCO', name: 'Total Cost of Ownership', chartX: 'Region', chartY: 'Procurement Cost' },
+                { id: 'NPV', name: 'Net Present Value', chartX: 'Time (Years)', chartY: 'Cash Flow Yield' },
+                { id: 'BOT', name: 'Capacity Bottlenecks', chartX: 'Node', chartY: 'Throughput Yield %' },
+                { id: 'DEF', name: 'Defensive Thresholds', chartX: 'Competitor', chartY: 'Subscriber Acquisition Cost (SAC)' }
+            ];
+            const theme = themes[Math.floor(Math.random() * themes.length)];
+
+            // Paragraph 1: Scale, Strengths, Vulnerabilities
+            const p1_scales = [`a massive, $${bigNumber} billion global enterprise`, `an agile, rapid-growth insurgent holding a $${bigNumber}M capitalization`, `a legacy market leader processing $${bigNumber}M in annual throughput`];
+            const p1_strengths = [`possessing an unmatched, highly defensible intellectual property portfolio`, `leveraging an incredibly dense, multi-continent physical asset footprint`, `historically commanding top-quartile pricing power`];
+            const p1_vulns = [`However, they are deeply burdened by an inflexible legacy management structure.`, `Yet, their technological infrastructure relies on decaying, on-premise silos.`, `Unfortunately, they are highly exposed to single-point vendor dependencies.`];
+            const p1 = `${brandName} is ${p1_scales[Math.floor(Math.random() * 3)]} within the ${industry} space. Recognized for ${p1_strengths[Math.floor(Math.random() * 3)]}. ${p1_vulns[Math.floor(Math.random() * 3)]}`;
+
+            // Paragraph 2: Unit Economics (Tied to theme)
+            let p2 = "";
+            if (theme.id === 'TCO') p2 = `The company's unit economics revolve around a massive cross-border sourcing network. They procure raw inputs from emerging markets, assembling them in near-shore facilities to minimize labor expenditures, before distributing via third-party freight.`;
+            else if (theme.id === 'NPV') p2 = `Their financial model is driven by heavy, upfront capital expenditures (CapEx) requiring strict 5-to-7 year depreciation schedules. Profitability dictates that these high-cost assets run at 90%+ utilization rates continuously.`;
+            else if (theme.id === 'BOT') p2 = `Operationally, they run a tightly coupled 'just-in-time' manufacturing ecosystem. Output relies entirely on the synchronized throughput of specialized, sequential production nodes operating with virtually zero inventory buffer.`;
+            else p2 = `Commercially, they rely on a high-volume, low-margin subscription architecture. Growth is sustained only by aggressively optimizing their customer lifetime value (LTV) against an ever-increasing cost to acquire users across digital channels.`;
+
+            // Paragraph 3: The Complication
+            const comps = [
+                `a sudden, localized protectionist tariff policy that immediately penalizes cross-border transit routes`,
+                `a rapid, unpredicted consumer migration to open-source digital alternatives, cannibalizing their core high-margin offering`,
+                `a catastrophic failure in a tier-2 supplier node that has fragmented their entire downstream distribution network`,
+                `an aggressive, low-cost international competitor initiating a brutal price war in their most profitable domestic territory`
+            ];
+            const complication = comps[Math.floor(Math.random() * 4)];
+            const p3 = `Recently, the ecosystem was shocked by ${complication}. This macro disruption has structurally broken their historical workflow, paralyzing capital flow and severely jeopardizing their market positioning.`;
+
+            const sponsors = ['Chief Risk Officer', 'Head of Global Supply Chain', 'VP of Strategic Finance', 'Chief Operating Officer'];
+            const sponsor = sponsors[Math.floor(Math.random() * 4)];
+
+            // 4. MATH ENGINE & THEMATIC QUESTIONS
+            let mathObj = {};
+            let chartLabels = [];
+            let q3_redHerring = "";
+            let q3_correlation = "";
+
+            if (theme.id === 'TCO') {
+                const labor = Math.floor(Math.random() * 3 + 2) * 100; // 200, 300, 400
+                const reduction = [25, 30, 40][Math.floor(Math.random() * 3)];
+                const tariff = Math.floor(Math.random() * 3 + 4) * 10; // 40, 50, 60
+                const savings = labor * (reduction / 100);
+                const net = savings - tariff;
+                mathObj = {
+                    prompt: `<p>To navigate the disruption, the client is evaluating shifting operations entirely. They currently spend $${labor} Million annually on legacy labor. Moving to an automated near-shore facility will cut labor costs by exactly ${reduction}%.</p><p>However, this triggers new regional compliance tariffs totaling a flat $${tariff} Million annually. What is the precise net financial outcome of this transition?</p>`,
+                    steps: [
+                        `Calculate absolute labor savings: $${labor}M &times; 0.${reduction} = $${savings}M.`,
+                        `Compare total savings against the new flat tariff penalty: $${savings}M vs $${tariff}M.`,
+                        `Deduct the tariff from the savings to isolate the net financial variance.`
+                    ],
+                    answer: `${net > 0 ? 'Positive Net Yield' : 'Negative Net Loss'} of $${Math.abs(net)} Million annually.`
+                };
+                chartLabels = ['Logistics', 'Procurement', 'Labor', 'Tariffs', 'Overhead'];
+                q3_redHerring = "The 'Procurement Cost' spike looks terrifying, but it is heavily subsidized by long-term forward contracts.";
+                q3_correlation = "The true bottleneck correlates perfectly with 'Logistics Delay Days' intersecting with sudden tariff clearance holds.";
+            } else if (theme.id === 'BOT') {
+                const cap = Math.floor(Math.random() * 4 + 5) * 100; // 500 to 800
+                const demand = cap + (Math.floor(Math.random() * 3 + 2) * 100); // Exceeds cap
+                const gap = demand - cap;
+                const nodeOutput = gap / 2;
+                mathObj = {
+                    prompt: `<p>The disruption has created a massive fulfillment backlog. Total forecasted demand is ${demand} Million units, but the legacy network is hard-capped at a maximum throughput of ${cap} Million units.</p><p>The engineering team can retrofit "Node Epsilon," which currently outputs ${nodeOutput} Million units. By exactly what percentage must Node Epsilon's throughput increase to single-handedly clear the entire network shortfall?</p>`,
+                    steps: [
+                        `Calculate the absolute network shortfall: ${demand}M demand &minus; ${cap}M capacity = ${gap}M units.`,
+                        `Identify the baseline target: Node Epsilon processes ${nodeOutput}M units.`,
+                        `Calculate required scaling factor: (${gap}M shortfall / ${nodeOutput}M base) &times; 100.`
+                    ],
+                    answer: `Exactly ${(gap/nodeOutput)*100}% Output Increase Required.`
+                };
+                chartLabels = ['Node A', 'Node B', 'Node C', 'Node D', 'Node Epsilon'];
+                q3_redHerring = "The 'Defect Rate' at Node C appears highly volatile, but it only impacts 4% of total network volume.";
+                q3_correlation = "The hidden failure point is the 'Throughput Yield %' crashing specifically when machine utilization breaches 85% capacity limits.";
+            } else if (theme.id === 'NPV') {
+                const capex = Math.floor(Math.random() * 4 + 2) * 100; // 200, 300, 400
+                const rev = Math.floor(Math.random() * 3 + 2) * 50; // 100, 150
+                const cost = 25;
+                const netYield = rev - cost;
+                mathObj = {
+                    prompt: `<p>The proposed digital transformation requires an immediate, non-depreciable CapEx injection of $${capex} Million. Once live, the new infrastructure will generate $${rev} Million in fresh annual revenue.</p><p>However, it requires a strict $${cost} Million annual maintenance contract. Assuming a 0% discount rate for simplicity, in exactly how many years will this project hit its break-even payback period?</p>`,
+                    steps: [
+                        `Determine net annual cash flow: $${rev}M new revenue &minus; $${cost}M maintenance = $${netYield}M/year.`,
+                        `Apply payback formula: Total Fixed CapEx / Net Annual Cash Flow.`,
+                        `Calculate: $${capex}M / $${netYield}M.`
+                    ],
+                    answer: `Exactly ${capex / netYield} Years to Break-Even.`
+                };
+                chartLabels = ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'];
+                q3_redHerring = "The 'Gross Implementation Spend' in Year 1 looks like a massive budget overrun, but it includes pre-approved amortized software licenses.";
+                q3_correlation = "The 'Cash Flow Yield' plummets in Year 3 exactly when legacy hardware warranties expire simultaneously.";
+            } else {
+                const market = Math.floor(Math.random() * 3 + 2) * 1000; // 2000, 3000
+                const targetPct = [15, 20, 25][Math.floor(Math.random() * 3)];
+                const reqValue = market * (targetPct / 100);
+                const ltv = 500;
+                mathObj = {
+                    prompt: `<p>To survive the competitor's price war, the client must hold exactly ${targetPct}% defensive market share. The total regional market capitalization is fixed at $${market} Million.</p><p>If the client's average customer lifetime value (LTV) is tightly modeled at $${ltv}, exactly how many active paying subscribers must they maintain to successfully hit their defensive revenue threshold?</p>`,
+                    steps: [
+                        `Calculate the absolute defensive revenue threshold: $${market}M &times; 0.${targetPct} = $${reqValue}M.`,
+                        `Divide the revenue threshold by the individual unit economics: $${reqValue}M / $${ltv} LTV.`,
+                        `Translate millions cleanly into absolute user metrics.`
+                    ],
+                    answer: `${(reqValue * 1000000 / ltv).toLocaleString()} Active Subscribers Required.`
+                };
+                chartLabels = ['Segment X', 'Segment Y', 'Segment Z', 'Enterprise', 'SMB'];
+                q3_redHerring = "The 'Subscriber Acquisition Cost (SAC)' in the SMB segment is skyrocketing, but their LTV is so high it remains highly profitable.";
+                q3_correlation = "The actual margin destruction is hiding in 'Segment Y', where aggressive discounting failed to reduce churn, destroying the LTV/CAC ratio.";
+            }
+
+            // 5. CHART.JS DATA ENGINE (15 Types safely handled)
+            const chartTypesPool = ['bubble', 'inverted', 'waterfall', 'dualAxis', 'stackedBar100', 'radar', 'scatter', 'stepline', 'polarArea', 'doughnut', 'line', 'bar', 'groupedBar', 'mixed', 'area'];
+            const selectedChart = chartTypesPool[Math.floor(Math.random() * chartTypesPool.length)];
+
+            // Generate safe baseline data
+            let d1 = [40, 60, 30, 80, 50];
+            let d2 = [20, 30, 15, 40, 25];
+
+            let cConfig = {
+                title: `${theme.name} Analytical Exhibit`,
+                xTitle: theme.chartX,
+                yTitle: theme.chartY,
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        { label: 'Primary Operating Metric', data: d1, backgroundColor: '#051c2c', borderColor: '#051c2c' }
+                    ]
+                }
+            };
+
+            // Format data structures specifically so Chart.js doesn't crash on complex layouts
+            if (selectedChart === 'waterfall') {
+                cConfig.data.datasets[0].data = [[0, 300], [300, 450], [400, 450], [400, 520], [0, 520]];
+                cConfig.data.datasets[0].backgroundColor = ['#051c2c', '#005f9e', '#e06b20', '#005f9e', '#051c2c'];
+            } else if (selectedChart === 'bubble') {
+                cConfig.data.datasets = [
+                    { label: 'Core Segments', data: [{ x: 15, y: 30, r: 10 }, { x: 45, y: 60, r: 25 }, { x: 75, y: 50, r: 15 }], backgroundColor: '#005f9e' },
+                    { label: 'Emerging Risks', data: [{ x: 20, y: 80, r: 12 }, { x: 60, y: 20, r: 20 }], backgroundColor: '#e06b20' }
+                ];
+            } else if (selectedChart === 'scatter') {
+                cConfig.data.datasets[0].data = [{ x: 10, y: 20 }, { x: 30, y: 40 }, { x: 50, y: 30 }, { x: 70, y: 80 }, { x: 90, y: 60 }];
+            } else if (selectedChart === 'stackedBar100' || selectedChart === 'groupedBar') {
+                cConfig.data.datasets.push({ label: 'Secondary Variable', data: d2, backgroundColor: '#005f9e' });
+                cConfig.data.datasets.push({ label: 'Tertiary Impact', data: [15, 25, 35, 10, 20], backgroundColor: '#94a3b8' });
+            } else if (selectedChart === 'dualAxis' || selectedChart === 'mixed') {
+                cConfig.data.datasets[0].type = 'bar';
+                cConfig.data.datasets.push({ type: 'line', label: 'Margin Yield %', data: [12, 18, 14, 22, 19], borderColor: '#e06b20', yAxisID: 'y1' });
+            } else if (selectedChart === 'doughnut' || selectedChart === 'polarArea') {
+                cConfig.data.datasets[0].backgroundColor = ['#051c2c', '#005f9e', '#e06b20', '#475569', '#94a3b8'];
+            }
+
+            // 6. ASSEMBLE FINAL JSON PAYLOAD
             return {
-                caseMetadata: {
-                    brandName: brandName,
-                    industry: industry,
-                    caseType: caseType,
-                    executiveSponsor: executiveSponsor,
-                    macroComplication: macroComplication,
-                    mathTargetVariable: targetMath
+                brandName: brandName,
+                industry: industry,
+                caseType: caseType,
+                clientGoal: `Reverse a ${randomVar}% ${randomMetric} threshold strictly within ${timelines[Math.floor(Math.random() * timelines.length)]}.`,
+                p1: p1,
+                p2: p2,
+                p3: p3,
+                mckinseyStudy: `The ${sponsor} has explicitly engaged McKinsey to diagnose the financial root causes of this disruption and execute an immediate stabilization framework.`,
+                q1: {
+                    prompt: `Given the explicit constraints triggered by the disruption, what specific operational trade-offs and financial structures must the team investigate?`,
+                    pillars: [
+                        { title: "Financial & Asset Liquidity", bullets: ["Immediate capital expenditure requirements.", "Depreciation schedules of stranded assets.", "Real estate and leasing liabilities."] },
+                        { title: "Operational Execution Logistics", bullets: ["Supplier concentration risk profiles.", "Cost impacts of newly imposed transit delays.", "Working capital requirements to buffer delays."] },
+                        { title: "Market Positioning Dynamics", bullets: ["Customer acquisition cost (CAC) inflation.", "Price elasticity against agile disruptors.", "Contractual lock-in rates for enterprise clients."] }
+                    ]
                 },
-                openingAct: {
-                    clientGoal: `Restructuring a 14% operational margin degradation within an aggressive 18-month timeline to appease activist shareholders.`,
-                    situationDescription: {
-                        paragraph1: `${brandName} is a massive, $45 billion enterprise deeply entrenched in the global ${industry} sector. Historically commanding top-quartile market share, their core asset footprint consists of highly specialized, capital-intensive infrastructure distributed across four continents.`,
-                        paragraph2: `The company's unit economics rely on a highly orchestrated distribution logistics network. They utilize a just-in-time supply chain model that heavily leverages third-party procurement vendors to maintain thin, highly optimized working capital cycles.`,
-                        paragraph3: `However, the ecosystem was recently shocked by ${macroComplication}. This dynamic has fundamentally broken their legacy workflow, stranding capital assets and dramatically compressing their historical pricing power against agile, digital-first competitors.`
-                    },
-                    mckinseyStudy: `The ${executiveSponsor} has engaged McKinsey to run an exhaustive operational diagnostic and build a rigorous financial blueprint to navigate this existential transition.`
+                q2: {
+                    prompt: mathObj.prompt,
+                    steps: mathObj.steps,
+                    answer: mathObj.answer
                 },
-                questions: [
-                    {
-                        questionNumber: 1,
-                        type: "Structuring",
-                        prompt: `Given the severe limitations imposed by ${macroComplication}, what core operational and financial leverage points must our team isolate to determine if a recovery is structurally feasible?`,
-                        idealAnswerRubric: {
-                            pillar1: {
-                                title: "Asset Repositioning & Write-Downs",
-                                subMetrics: ["Capital expenditure requirements for retrofitting infrastructure.", "Depreciation schedules of currently stranded operational assets.", "Real estate/lease liabilities across disrupted regions.", "Liquidation value of legacy inventory bottlenecks."]
-                            },
-                            pillar2: {
-                                title: "Supply Chain Resilience & Tariffs",
-                                subMetrics: ["Supplier concentration risk profiles in tier-1 and tier-2 nodes.", "Cost impact of localized tariffs on raw material COGS.", "Lead-time variance under the new regulatory framework.", "Working capital requirements to buffer new transit delays."]
-                            },
-                            pillar3: {
-                                title: "Market Share & Pricing Power",
-                                subMetrics: ["Customer acquisition cost (CAC) inflation via digital channels.", "Price elasticity modeling against new agile competitors.", "Contractual lock-in rates for enterprise-tier clients.", "Cost-to-serve metrics segmented by geographic territory."]
-                            }
-                        }
-                    },
-                    {
-                        questionNumber: 2,
-                        type: "Quantitative",
-                        prompt: mathData.prompt,
-                        mathematicalFormulas: mathData.formulas,
-                        calculationSteps: mathData.steps,
-                        correctAnswerWithUnits: mathData.answer
-                    },
-                    {
-                        questionNumber: 3,
-                        type: "Data Synthesis",
-                        prompt: "Our data science engineers have extracted telemetry from the client's core logistics network. Review the data table below. Identify the primary operational bottleneck, taking care to avoid any misleading metrics.",
-                        dataExhibit: {
-                            headers: ["Operating Node", "Throughput Yield %", "Days Inventory Outstanding (DIO)", "Subscriber Acquisition Cost (SAC)"],
-                            rows: [
-                                ["Node Alpha-1", "94.2%", "14 Days", "$1,450 (High)"],
-                                ["Node Beta-2", "95.1%", "45 Days", "$250 (Low)"],
-                                ["Node Gamma-3", "92.8%", "18 Days", "$1,200 (Avg)"]
-                            ]
-                        },
-                        analyticalInsights: {
-                            coreTakeaway: "Node Beta-2 is severely bottlenecking the entire capital cycle, as evidenced by its massive DIO (45 Days) compared to the network average.",
-                            hiddenCorrelation: "The artificially low SAC at Node Beta-2 ($250) is actually driving massive inventory pileups because they are acquiring low-intent customers who do not convert, leaving stock stranded.",
-                            redHerringIdentified: "Throughput Yield %. All nodes are operating within a tight 92-95% efficiency band. A weak candidate will waste time analyzing fractional yield differences instead of spotting the catastrophic working capital drain in DIO."
-                        }
-                    },
-                    {
-                        questionNumber: 4,
-                        type: "Strategic Pivot",
-                        prompt: `During a steering committee update, the ${executiveSponsor} voices a highly aggressive objection: "If we execute this transition, we risk catastrophic disruption to our most loyal, high-margin legacy clients. How do we prevent this?"`,
-                        brainstormingRubric: {
-                            "Operational Ring-Fencing": [
-                                "Establish a dedicated 'White Glove' fulfillment track entirely separated from the transition systems for the top 5% of enterprise clients.",
-                                "Pre-build an artificial 90-day inventory buffer for legacy accounts prior to initiating the cutover sequence."
-                            ],
-                            "Financial & Contractual Hedging": [
-                                "Proactively restructure enterprise SLA contracts with temporary price concessions in exchange for extended transition grace periods.",
-                                "Utilize external vendor performance bonds to shift the financial liability of transition downtime off the client's balance sheet."
-                            ],
-                            "Communication & Governance": [
-                                "Deploy a localized 'War Room' executive integration team embedded directly within the operations of top-tier accounts.",
-                                "Implement a strict 'Stage-Gate' rollback protocol, allowing an immediate reversion to legacy systems if defect rates breach 1.5%."
-                            ]
-                        }
-                    }
-                ]
+                q3: {
+                    prompt: `Our data architects mapped the client's internal telemetry across the affected ${theme.chartX}s. Analyze the visual exhibit below. What underlying operational breakdown is occurring?`,
+                    redHerring: q3_redHerring,
+                    correlation: q3_correlation,
+                    takeaway: `The data definitively proves that the client's failure is structural, not commercial. Capital must be immediately reallocated to resolve the ${theme.chartY} bottleneck before scaling further.`
+                },
+                q4: {
+                    prompt: `The ${sponsor} pushes back immediately: "If we execute this transition, we risk catastrophic operational downtime that will permanently alienate our highest-margin legacy clients." How do we mitigate this downstream threat?`,
+                    rubric: [
+                        { theme: "Operational Ring-Fencing", bullets: ["Establish a dedicated 'White Glove' fulfillment track entirely separated from the transition systems.", "Pre-build an artificial 90-day inventory buffer for legacy accounts prior to cutover."] },
+                        { theme: "Financial Hedging", bullets: ["Proactively restructure SLA contracts with temporary price concessions in exchange for transition grace periods.", "Utilize external vendor performance bonds to shift financial liability off the balance sheet."] },
+                        { theme: "Governance & Rollback", bullets: ["Deploy a localized 'War Room' executive integration team embedded within top-tier accounts.", "Implement a strict 'Stage-Gate' rollback protocol if defect rates breach 1.5%."] }
+                    ]
+                },
+                chart: {
+                    type: selectedChart,
+                    config: cConfig
+                }
             };
         }
     </script>
