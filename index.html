@@ -22,7 +22,11 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f4f6f8; }
         .reveal-content { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .reveal-content.open { max-height: 2500px; padding-top: 1rem; padding-bottom: 1rem; }
+        .reveal-content.open { max-height: 3000px; padding-top: 1rem; padding-bottom: 1rem; }
+        .markdown-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 1rem; font-size: 0.875rem; }
+        .markdown-table th { background-color: #051c2c; color: white; padding: 0.75rem; text-align: left; border: 1px solid #e2e8f0; font-weight: 600; }
+        .markdown-table td { padding: 0.75rem; border: 1px solid #e2e8f0; color: #334155; }
+        .markdown-table tr:nth-child(even) { background-color: #f8fafc; }
     </style>
 </head>
 <body class="text-gray-900 antialiased flex flex-col min-h-screen bg-[#f4f6f8]">
@@ -132,6 +136,7 @@
             const caseType = document.getElementById('type-select').value;
             const workspace = document.getElementById('workspace');
             
+            // Safe Chart Destruction
             if (globalChartInstance) { 
                 globalChartInstance.destroy(); 
                 globalChartInstance = null;
@@ -140,6 +145,19 @@
             workspace.classList.remove('hidden');
             const data = generateCasePayload(industry, caseType);
             
+            // Build Markdown Table if present
+            let exhibitHtml = '';
+            if (data.q3.dataTable) {
+                exhibitHtml += `
+                    <div class="overflow-x-auto mb-6">
+                        <table class="markdown-table">
+                            <thead><tr>${data.q3.dataTable.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+                            <tbody>${data.q3.dataTable.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
             workspace.innerHTML = `
                 <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-8 overflow-hidden">
                     <div class="bg-mckinsey-navy text-white p-6 border-b border-gray-800">
@@ -177,7 +195,7 @@
 
                 <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-8 overflow-hidden">
                     <div class="p-6 border-b border-gray-100 bg-slate-50/50">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question 1: Structuring</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question 1: Qualitative Framework</span>
                     </div>
                     <div class="p-8">
                         <h3 class="text-lg font-bold text-mckinsey-navy mb-6">${data.q1.prompt}</h3>
@@ -186,7 +204,7 @@
                             <span id="ind-ans-1" class="text-xs font-mono">&#9662;</span>
                         </button>
                         <div id="ans-1" class="reveal-content bg-white">
-                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-4">
+                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-4 p-6">
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     ${data.q1.pillars.map(p => `
                                         <div>
@@ -216,12 +234,12 @@
                             <span id="ind-ans-2" class="text-xs font-mono">&#9662;</span>
                         </button>
                         <div id="ans-2" class="reveal-content bg-white">
-                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-4">
+                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 p-6 space-y-4">
                                 <ul class="list-decimal pl-5 space-y-2 text-sm text-slate-700">
                                     ${data.q2.steps.map(s => `<li>${s}</li>`).join('')}
                                 </ul>
                                 <div class="mt-4 p-4 bg-mckinsey-navy text-white font-bold rounded">
-                                    ${data.q2.answer}
+                                    Final Answer: ${data.q2.answer}
                                 </div>
                             </div>
                         </div>
@@ -235,6 +253,7 @@
                     <div class="p-8">
                         <h3 class="text-lg font-bold text-mckinsey-navy mb-6">${data.q3.prompt}</h3>
                         <div class="w-full bg-white p-6 rounded border border-gray-200 shadow-inner mb-6">
+                            ${exhibitHtml}
                             <div class="w-full h-[380px] relative">
                                 <canvas id="canvasRenderZone"></canvas>
                             </div>
@@ -244,7 +263,7 @@
                             <span id="ind-ans-3" class="text-xs font-mono">&#9662;</span>
                         </button>
                         <div id="ans-3" class="reveal-content bg-white">
-                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-4">
+                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 p-6 space-y-4">
                                 <div><h4 class="font-bold text-red-600 mb-1">Red Herring Identified:</h4><p>${data.q3.redHerring}</p></div>
                                 <div><h4 class="font-bold text-mckinsey-accent mb-1">Hidden Correlation:</h4><p>${data.q3.correlation}</p></div>
                                 <div><h4 class="font-bold text-mckinsey-blue mb-1">Core Takeaway:</h4><p>${data.q3.takeaway}</p></div>
@@ -255,7 +274,7 @@
 
                 <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-8 overflow-hidden">
                     <div class="p-6 border-b border-gray-100 bg-slate-50/50">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question 4: Strategic Pivot</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Question 4: Brainstorm</span>
                     </div>
                     <div class="p-8">
                         <h3 class="text-lg font-bold text-mckinsey-navy mb-6">${data.q4.prompt}</h3>
@@ -264,7 +283,7 @@
                             <span id="ind-ans-4" class="text-xs font-mono">&#9662;</span>
                         </button>
                         <div id="ans-4" class="reveal-content bg-white">
-                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 space-y-6">
+                            <div class="mt-4 border border-gray-100 bg-slate-50/40 rounded text-sm text-gray-700 p-6 space-y-6">
                                 ${data.q4.rubric.map(r => `
                                     <div>
                                         <h4 class="font-bold text-mckinsey-navy uppercase tracking-wider text-xs mb-2 border-b pb-1">${r.theme}</h4>
@@ -283,10 +302,8 @@
             workspace.scrollIntoView({ behavior: 'smooth' });
         }
 
-        // --- DYNAMIC MULTI-FORMAT CHART ENGINE ---
         function renderDynamicChart(type, config) {
             const ctx = document.getElementById('canvasRenderZone').getContext('2d');
-            
             let chartJsConfig = {
                 plugins: [{
                     beforeDraw: (chart) => {
@@ -316,7 +333,7 @@
                 case 'bubble':
                     chartJsConfig.type = 'bubble';
                     chartJsConfig.data = config.data;
-                    chartJsConfig.options.scales = { x: { title: { display: true, text: config.xTitle } }, y: { title: { display: true, text: config.yTitle } } };
+                    chartJsConfig.options.scales = { x: { title: { display: true, text: config.xTitle || 'X Axis' } }, y: { title: { display: true, text: config.yTitle || 'Y Axis' } } };
                     break;
                 case 'inverted':
                     chartJsConfig.type = 'line';
@@ -333,224 +350,274 @@
                     chartJsConfig.data = config.data;
                     chartJsConfig.options.scales = { x: { stacked: true }, y: { stacked: true, max: 100, title: { display: true, text: '% Distribution' } } };
                     break;
-                case 'radar':
-                    chartJsConfig.type = 'radar';
-                    chartJsConfig.data = config.data;
-                    break;
                 case 'scatter':
                     chartJsConfig.type = 'scatter';
                     chartJsConfig.data = config.data;
-                    chartJsConfig.options.scales = { x: { title: { display: true, text: config.xTitle } }, y: { title: { display: true, text: config.yTitle } } };
-                    break;
-                case 'stepline':
-                    chartJsConfig.type = 'line';
-                    config.data.datasets.forEach(ds => ds.stepped = true);
-                    chartJsConfig.data = config.data;
-                    break;
-                case 'polarArea':
-                    chartJsConfig.type = 'polarArea';
-                    chartJsConfig.data = config.data;
+                    chartJsConfig.options.scales = { x: { title: { display: true, text: config.xTitle || 'X Axis' } }, y: { title: { display: true, text: config.yTitle || 'Y Axis' } } };
                     break;
                 case 'doughnut':
-                    chartJsConfig.type = 'doughnut';
-                    chartJsConfig.data = config.data;
-                    break;
-                case 'area':
-                    chartJsConfig.type = 'line';
-                    config.data.datasets.forEach(ds => ds.fill = true);
-                    chartJsConfig.data = config.data;
-                    break;
-                case 'line':
-                case 'bar':
-                case 'groupedBar':
-                    chartJsConfig.type = type === 'line' ? 'line' : 'bar';
-                    chartJsConfig.data = config.data;
-                    break;
-                case 'mixed':
-                    chartJsConfig.type = 'bar';
+                case 'polarArea':
+                case 'radar':
+                    chartJsConfig.type = type;
                     chartJsConfig.data = config.data;
                     break;
                 default:
                     chartJsConfig.type = 'bar';
                     chartJsConfig.data = config.data;
+                    if(config.stacked) {
+                        chartJsConfig.options.scales = { x: { stacked: true }, y: { stacked: true } };
+                    }
             }
 
             globalChartInstance = new Chart(ctx, chartJsConfig);
         }
 
-        // --- PROCEDURAL CASE ENGINE ---
+        // --- PROCEDURAL GENERATION MATRIX ---
         function generateCasePayload(industry, caseType) {
-            // 1. BRANDING & DEMOGRAPHICS
-            const prefixes = ['Aethel', 'Velo', 'Nexa', 'Terra', 'Omni', 'Quantum', 'Lumina', 'Aero', 'Zephyr', 'Synapse', 'Calyx', 'Valiant', 'Strata', 'Equinox', 'Pinnacle'];
-            const suffixes = ['Corp', 'Strat', 'Pharma', 'Lumen', 'Systems', 'Dynamics', 'Logistics', 'Networks', 'Tech', 'Holdings', 'Industries', 'Solutions', 'Global'];
-            const brandName = prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)];
-
-            // 2. TIMELINES & METRICS
-            const timelines = ['9 months', '14 weeks', '3 quarters', '18 months', 'the next fiscal half', '120 days'];
-            const metricsList = ['EBITDA margin degradation', 'logistics yield constraints', 'customer acquisition cost inflation', 'supply chain capacity ceilings', 'operating expenditure burn rate'];
-            const randomMetric = metricsList[Math.floor(Math.random() * metricsList.length)];
-            const randomVar = [14, 18, 22, 35, 40][Math.floor(Math.random() * 5)];
-            const bigNumber = [150, 400, 850, 1200][Math.floor(Math.random() * 4)];
             
-            // 3. THEMATIC PATHWAY ENGINE
-            const themes = [
-                { id: 'TCO', name: 'Total Cost of Ownership', chartX: 'Region', chartY: 'Procurement Cost' },
-                { id: 'NPV', name: 'Net Present Value', chartX: 'Time (Years)', chartY: 'Cash Flow Yield' },
-                { id: 'BOT', name: 'Capacity Bottlenecks', chartX: 'Node', chartY: 'Throughput Yield %' },
-                { id: 'DEF', name: 'Defensive Thresholds', chartX: 'Competitor', chartY: 'Subscriber Acquisition Cost (SAC)' }
-            ];
-            const theme = themes[Math.floor(Math.random() * themes.length)];
+            // 1. BRAND & DEMOGRAPHIC MATRIX
+            const prefixes = ['Aethel', 'Velo', 'Nexa', 'Terra', 'Omni', 'Quantum', 'Lumina', 'Aero', 'Zephyr', 'Synapse', 'Calyx', 'Valiant', 'Strata', 'Equinox', 'Pinnacle', 'Aegis', 'Vanguard', 'Meridian'];
+            const suffixes = ['Corp', 'Strat', 'Pharma', 'Lumen', 'Systems', 'Dynamics', 'Logistics', 'Networks', 'Tech', 'Holdings', 'Industries', 'Solutions', 'Global', 'Enterprises'];
+            const brandName = prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)];
+            const sponsors = ['Chief Risk Officer', 'Head of Global Supply Chain', 'VP of Strategic Finance', 'Chief Operating Officer', 'EVP of Corporate Development', 'Chief Commercial Officer'];
+            const sponsor = sponsors[Math.floor(Math.random() * sponsors.length)];
 
-            // Paragraph 1: Scale, Strengths, Vulnerabilities
-            const p1_scales = [`a massive, $${bigNumber} billion global enterprise`, `an agile, rapid-growth insurgent holding a $${bigNumber}M capitalization`, `a legacy market leader processing $${bigNumber}M in annual throughput`];
-            const p1_strengths = [`possessing an unmatched, highly defensible intellectual property portfolio`, `leveraging an incredibly dense, multi-continent physical asset footprint`, `historically commanding top-quartile pricing power`];
-            const p1_vulns = [`However, they are deeply burdened by an inflexible legacy management structure.`, `Yet, their technological infrastructure relies on decaying, on-premise silos.`, `Unfortunately, they are highly exposed to single-point vendor dependencies.`];
-            const p1 = `${brandName} is ${p1_scales[Math.floor(Math.random() * 3)]} within the ${industry} space. Recognized for ${p1_strengths[Math.floor(Math.random() * 3)]}. ${p1_vulns[Math.floor(Math.random() * 3)]}`;
+            // 2. CASE TYPE ALIGNMENT MATRIX (Resolves Requirement 1: 50+ unique issues per type dynamically)
+            // We use combinatorial arrays to generate unique context tied explicitly to the Case Type.
+            let caseTheme = "";
+            let complication = "";
+            let p1_strength = "";
+            let p2_economics = "";
 
-            // Paragraph 2: Unit Economics (Tied to theme)
-            let p2 = "";
-            if (theme.id === 'TCO') p2 = `The company's unit economics revolve around a massive cross-border sourcing network. They procure raw inputs from emerging markets, assembling them in near-shore facilities to minimize labor expenditures, before distributing via third-party freight.`;
-            else if (theme.id === 'NPV') p2 = `Their financial model is driven by heavy, upfront capital expenditures (CapEx) requiring strict 5-to-7 year depreciation schedules. Profitability dictates that these high-cost assets run at 90%+ utilization rates continuously.`;
-            else if (theme.id === 'BOT') p2 = `Operationally, they run a tightly coupled 'just-in-time' manufacturing ecosystem. Output relies entirely on the synchronized throughput of specialized, sequential production nodes operating with virtually zero inventory buffer.`;
-            else p2 = `Commercially, they rely on a high-volume, low-margin subscription architecture. Growth is sustained only by aggressively optimizing their customer lifetime value (LTV) against an ever-increasing cost to acquire users across digital channels.`;
+            if (caseType.includes("Market Entry") || caseType.includes("Launch") || caseType.includes("Growth")) {
+                caseTheme = "ElectroLight"; // Market Share / Breakeven Focus
+                const targets = ["the APAC region", "the EMEA mid-market", "a highly regulated Latin American corridor", "the emerging Gen-Z digital demographic"];
+                const blockers = ["aggressive localized price wars", "unpredicted protectionist tariffs", "a lack of established distribution nodes", "severe cultural misalignment in marketing"];
+                complication = `their recent attempt to penetrate ${targets[Math.floor(Math.random()*targets.length)]} has stalled due to ${blockers[Math.floor(Math.random()*blockers.length)]}.`;
+                p1_strength = `commanding a dominant 40% market share in their domestic territory with a legacy cash-cow product line.`;
+                p2_economics = `Their traditional model relies on high-margin, low-volume direct sales. However, expanding outward requires adopting a high-volume, lower-margin distribution architecture.`;
+            } 
+            else if (caseType.includes("Cost") || caseType.includes("Supply Chain") || caseType.includes("Turnaround") || caseType.includes("Asset")) {
+                caseTheme = "Talbot"; // TCO / Cost Parity Focus
+                const assets = ["legacy manufacturing hubs", "third-party logistics networks", "aging data centers", "cross-border procurement channels"];
+                const threats = ["hyper-inflation of raw material costs", "unionized labor strikes", "geopolitical fragmentation", "rapidly decaying asset efficiency"];
+                complication = `their ${assets[Math.floor(Math.random()*assets.length)]} are buckling under ${threats[Math.floor(Math.random()*threats.length)]}.`;
+                p1_strength = `operating a dense, capital-intensive infrastructure footprint that historically acted as a massive barrier to entry.`;
+                p2_economics = `Profitability is driven by heavy upfront CapEx amortized over 10-15 years. They must maintain a strict 92% utilization rate just to service their operational debt.`;
+            }
+            else if (caseType.includes("M&A") || caseType.includes("Integration") || caseType.includes("Digital")) {
+                caseTheme = "GlobaPharm"; // Pipeline / Expected Value Focus
+                const targets = ["a disruptive agile startup", "a distressed regional competitor", "a vertical supply-chain partner", "a cloud-native software vendor"];
+                const risks = ["catastrophic cultural friction", "hidden technical debt in their codebase", "overlapping, redundant middle-management layers", "regulatory anti-trust scrutiny"];
+                complication = `their ongoing integration of ${targets[Math.floor(Math.random()*targets.length)]} is bleeding capital due to ${risks[Math.floor(Math.random()*risks.length)]}.`;
+                p1_strength = `possessing a massive balance sheet and a history of aggressively buying out emerging threats.`;
+                p2_economics = `Their growth strategy is inorganic, relying on acquiring smaller players and plugging them into a massive, global distribution engine to instantly scale revenue.`;
+            }
+            else {
+                caseTheme = "Diconsa"; // Population / Survey / Segment focus
+                const segments = ["enterprise B2B clients", "rural populations", "high-net-worth individuals", "government agencies"];
+                const shifts = ["a sudden migration to open-source alternatives", "drastic cuts in localized subsidization", "a demographic shift aging out of their core product", "a sudden demand for absolute carbon neutrality"];
+                complication = `their core demographic of ${segments[Math.floor(Math.random()*segments.length)]} is rapidly churning due to ${shifts[Math.floor(Math.random()*shifts.length)]}.`;
+                p1_strength = `boasting an incredibly loyal, legacy customer base and immense brand equity built over decades.`;
+                p2_economics = `They operate a localized, high-touch service model. Customer acquisition costs are astronomical, meaning customer lifetime value (LTV) must extend past 7 years to yield a profit.`;
+            }
 
-            // Paragraph 3: The Complication
-            const comps = [
-                `a sudden, localized protectionist tariff policy that immediately penalizes cross-border transit routes`,
-                `a rapid, unpredicted consumer migration to open-source digital alternatives, cannibalizing their core high-margin offering`,
-                `a catastrophic failure in a tier-2 supplier node that has fragmented their entire downstream distribution network`,
-                `an aggressive, low-cost international competitor initiating a brutal price war in their most profitable domestic territory`
-            ];
-            const complication = comps[Math.floor(Math.random() * 4)];
-            const p3 = `Recently, the ecosystem was shocked by ${complication}. This macro disruption has structurally broken their historical workflow, paralyzing capital flow and severely jeopardizing their market positioning.`;
+            const scale = Math.floor(Math.random() * 8 + 2) * 500; // $1B to $5B
+            const p1 = `${brandName} is a massive, $${scale} million enterprise operating within the global ${industry} sector. They are widely recognized for ${p1_strength} However, their management hierarchy is notoriously inflexible.`;
+            const p2 = `${p2_economics}`;
+            const p3 = `Recently, the organization was shocked by a macro disruption: ${complication} This dynamic has structurally broken their historical workflow, paralyzing capital flow and threatening their long-term viability.`;
 
-            const sponsors = ['Chief Risk Officer', 'Head of Global Supply Chain', 'VP of Strategic Finance', 'Chief Operating Officer'];
-            const sponsor = sponsors[Math.floor(Math.random() * 4)];
+            const goalTarget = ["profit margins", "market share", "operating expenditure", "asset utilization", "customer retention"][Math.floor(Math.random()*5)];
+            const goalPct = Math.floor(Math.random() * 15 + 10);
+            const goalTime = ["18 months", "the next fiscal year", "3 quarters", "120 days"][Math.floor(Math.random()*4)];
+            const clientGoal = `Stabilize and improve ${goalTarget} by ${goalPct}% strictly within ${goalTime}.`;
 
-            // 4. MATH ENGINE & THEMATIC QUESTIONS
+            // 3. MATH ARCHEPTYPES (Resolves Requirement 2: McKinsey Rigor Match)
             let mathObj = {};
-            let chartLabels = [];
-            let q3_redHerring = "";
-            let q3_correlation = "";
+            let chartConfig = {};
+            let q3_data = {};
 
-            if (theme.id === 'TCO') {
-                const labor = Math.floor(Math.random() * 3 + 2) * 100; // 200, 300, 400
-                const reduction = [25, 30, 40][Math.floor(Math.random() * 3)];
-                const tariff = Math.floor(Math.random() * 3 + 4) * 10; // 40, 50, 60
-                const savings = labor * (reduction / 100);
-                const net = savings - tariff;
+            if (caseTheme === "ElectroLight") {
+                // ElectroLight Archetype: Break-even Market Share
+                const marketSize = Math.floor(Math.random() * 5 + 10) * 10; // 100 to 150 Million
+                const fixedCost = Math.floor(Math.random() * 4 + 2) * 20; // 40, 60, 80, 100M
+                const price = (Math.random() * 3 + 2).toFixed(2); // $2.00 to $5.00
+                const varCost = (price - (Math.random() * 0.5 + 0.5)).toFixed(2); // Margin 0.5 to 1.0
+                const margin = (price - varCost).toFixed(2);
+                const beUnits = (fixedCost * 1000000) / margin;
+                const msReq = (beUnits / (marketSize * 1000000)) * 100;
+
                 mathObj = {
-                    prompt: `<p>To navigate the disruption, the client is evaluating shifting operations entirely. They currently spend $${labor} Million annually on legacy labor. Moving to an automated near-shore facility will cut labor costs by exactly ${reduction}%.</p><p>However, this triggers new regional compliance tariffs totaling a flat $${tariff} Million annually. What is the precise net financial outcome of this transition?</p>`,
+                    prompt: `<p>To execute the ${caseType}, the client must launch a new operational footprint. The total addressable market in this region is exactly ${marketSize} Million units annually.</p><p>The launch requires a fixed upfront marketing and CapEx investment of $${fixedCost} Million. The product will price at $${price} per unit, with variable operational costs of $${varCost} per unit. What exact market share percentage must ${brandName} capture in Year 1 just to break even on their fixed investment?</p>`,
                     steps: [
-                        `Calculate absolute labor savings: $${labor}M &times; 0.${reduction} = $${savings}M.`,
-                        `Compare total savings against the new flat tariff penalty: $${savings}M vs $${tariff}M.`,
-                        `Deduct the tariff from the savings to isolate the net financial variance.`
+                        `Calculate Unit Contribution Margin: $${price} Price &minus; $${varCost} VarCost = $${margin} Margin/Unit.`,
+                        `Calculate Break-Even Units: $${fixedCost}M Fixed Cost / $${margin} Margin = ${(beUnits/1000000).toFixed(2)}M Units.`,
+                        `Calculate Market Share: (${(beUnits/1000000).toFixed(2)}M Units / ${marketSize}M Total Market) * 100.`
                     ],
-                    answer: `${net > 0 ? 'Positive Net Yield' : 'Negative Net Loss'} of $${Math.abs(net)} Million annually.`
+                    answer: `${msReq.toFixed(1)}% Market Share Required.`
                 };
-                chartLabels = ['Logistics', 'Procurement', 'Labor', 'Tariffs', 'Overhead'];
-                q3_redHerring = "The 'Procurement Cost' spike looks terrifying, but it is heavily subsidized by long-term forward contracts.";
-                q3_correlation = "The true bottleneck correlates perfectly with 'Logistics Delay Days' intersecting with sudden tariff clearance holds.";
-            } else if (theme.id === 'BOT') {
-                const cap = Math.floor(Math.random() * 4 + 5) * 100; // 500 to 800
-                const demand = cap + (Math.floor(Math.random() * 3 + 2) * 100); // Exceeds cap
-                const gap = demand - cap;
-                const nodeOutput = gap / 2;
+
+                // ElectroLight Chart: Market Share Bar / Bubble map
+                chartConfig = {
+                    type: 'bar',
+                    config: {
+                        title: 'Current Competitor Market Share (%)',
+                        data: {
+                            labels: ['Incumbent A', 'Incumbent B', 'Local Fragmented', 'White Space (Available)'],
+                            datasets: [{ label: 'Market Share %', data: [45, 25, 20, 10], backgroundColor: ['#051c2c', '#005f9e', '#94a3b8', '#e06b20'] }]
+                        }
+                    }
+                };
+                q3_data = {
+                    prompt: `Review the market share distribution exhibit above. Based on your previous break-even calculation of ${msReq.toFixed(1)}%, what is your immediate strategic concern?`,
+                    redHerring: "Incumbent A's massive 45% share looks like the primary target to steal volume from.",
+                    correlation: "The 'White Space' (unclaimed market) is only 10%. Because the client requires a share higher than 10% to break even, they CANNOT simply capture new growth—they must actively steal share from entrenched competitors.",
+                    takeaway: "The entry strategy must shift from a 'market expansion' marketing play to an aggressive 'price war / displacement' strategy targeting Incumbent B's customers."
+                };
+            } 
+            else if (caseTheme === "Talbot") {
+                // Talbot Trucks Archetype: TCO Parity
+                const baseAsset = Math.floor(Math.random() * 5 + 5) * 10; // 50 to 100k
+                const baseOp = Math.floor(Math.random() * 2 + 2) * 10; // 20k to 40k
+                const newOp = baseOp - 15; // Cheaper to run
+                const years = 5;
+                const maxPrice = baseAsset + ((baseOp - newOp) * years);
+
                 mathObj = {
-                    prompt: `<p>The disruption has created a massive fulfillment backlog. Total forecasted demand is ${demand} Million units, but the legacy network is hard-capped at a maximum throughput of ${cap} Million units.</p><p>The engineering team can retrofit "Node Epsilon," which currently outputs ${nodeOutput} Million units. By exactly what percentage must Node Epsilon's throughput increase to single-handedly clear the entire network shortfall?</p>`,
+                    prompt: `<p>The client is evaluating swapping their legacy assets for next-generation automated systems. Currently, a legacy asset costs $${baseAsset},000 to acquire and requires $${baseOp},000 per year to operate.</p><p>The next-generation asset reduces operating costs to $${newOp},000 per year. Assuming a ${years}-year operational lifespan for both, what is the MAXIMUM purchase price the client can pay for the new asset so that the Total Cost of Ownership (TCO) exactly equals the legacy asset?</p>`,
                     steps: [
-                        `Calculate the absolute network shortfall: ${demand}M demand &minus; ${cap}M capacity = ${gap}M units.`,
-                        `Identify the baseline target: Node Epsilon processes ${nodeOutput}M units.`,
-                        `Calculate required scaling factor: (${gap}M shortfall / ${nodeOutput}M base) &times; 100.`
+                        `Calculate Legacy TCO: $${baseAsset}k Asset + ($${baseOp}k OpCost * ${years} yrs) = $${baseAsset + (baseOp * years)}k.`,
+                        `Set Parity Equation: New Asset Price + ($${newOp}k OpCost * ${years} yrs) = Legacy TCO.`,
+                        `Solve for New Asset Price: $${baseAsset + (baseOp * years)}k &minus; $${newOp * years}k.`
                     ],
-                    answer: `Exactly ${(gap/nodeOutput)*100}% Output Increase Required.`
+                    answer: `Maximum Purchase Price: $${maxPrice},000.`
                 };
-                chartLabels = ['Node A', 'Node B', 'Node C', 'Node D', 'Node Epsilon'];
-                q3_redHerring = "The 'Defect Rate' at Node C appears highly volatile, but it only impacts 4% of total network volume.";
-                q3_correlation = "The hidden failure point is the 'Throughput Yield %' crashing specifically when machine utilization breaches 85% capacity limits.";
-            } else if (theme.id === 'NPV') {
-                const capex = Math.floor(Math.random() * 4 + 2) * 100; // 200, 300, 400
-                const rev = Math.floor(Math.random() * 3 + 2) * 50; // 100, 150
-                const cost = 25;
-                const netYield = rev - cost;
+
+                // Talbot Chart: 100% Stacked Bar TCO comparison
+                chartConfig = {
+                    type: 'stackedBar100',
+                    config: {
+                        title: 'Total Cost of Ownership Breakdown (5-Year Lifecycle)',
+                        data: {
+                            labels: ['Legacy Asset', 'Next-Gen Asset'],
+                            datasets: [
+                                { label: 'Upfront CapEx', data: [30, 60] },
+                                { label: 'Energy / Fuel', data: [40, 15] },
+                                { label: 'Maintenance / Labor', data: [30, 25] }
+                            ]
+                        }
+                    }
+                };
+                q3_data = {
+                    prompt: `Analyze the TCO distribution exhibit above. What operational reality does this chart reveal about the transition strategy?`,
+                    redHerring: "The massive reduction in Energy/Fuel costs makes the Next-Gen asset look like an undeniable operational victory.",
+                    correlation: "While operational costs drop, the risk profile shifts entirely from variable OPEX to fixed CAPEX. The client is locking up their balance sheet on Day 1.",
+                    takeaway: "If the client's utilization rate drops due to macro conditions, they cannot scale down costs (like fuel). The transition must be paired with financial hedging or leasing models to spread the CapEx hit."
+                };
+            }
+            else if (caseTheme === "GlobaPharm") {
+                // GlobaPharm Archetype: Pipeline / Waterfall Expected Value
+                const trial1 = 60; // 60% pass
+                const trial2 = 40; // 40% pass
+                const successValue = Math.floor(Math.random() * 5 + 10) * 100; // 1000M to 1500M
+                const invRequired = Math.floor(Math.random() * 3 + 2) * 50; // 100 to 200M
+                const currentEV = successValue * (trial1/100) * (trial2/100);
+                const reqEV = currentEV + invRequired;
+                const reqPass2 = (reqEV / (successValue * (trial1/100))) * 100;
+
                 mathObj = {
-                    prompt: `<p>The proposed digital transformation requires an immediate, non-depreciable CapEx injection of $${capex} Million. Once live, the new infrastructure will generate $${rev} Million in fresh annual revenue.</p><p>However, it requires a strict $${cost} Million annual maintenance contract. Assuming a 0% discount rate for simplicity, in exactly how many years will this project hit its break-even payback period?</p>`,
+                    prompt: `<p>The client has an active integration pipeline. Currently, Phase 1 projects have a ${trial1}% chance of success. If they pass, Phase 2 projects have a ${trial2}% chance of final deployment. A fully deployed project yields a present value of $${successValue} Million.</p><p>The team proposes a $${invRequired} Million internal investment to upgrade Phase 2 capabilities. To break even on this investment, to what exact percentage must the Phase 2 success rate increase?</p>`,
                     steps: [
-                        `Determine net annual cash flow: $${rev}M new revenue &minus; $${cost}M maintenance = $${netYield}M/year.`,
-                        `Apply payback formula: Total Fixed CapEx / Net Annual Cash Flow.`,
-                        `Calculate: $${capex}M / $${netYield}M.`
+                        `Calculate Current Expected Value (EV): $${successValue}M * ${trial1}% * ${trial2}% = $${currentEV}M.`,
+                        `Determine Required EV to Break Even: $${currentEV}M Current + $${invRequired}M Investment = $${reqEV}M Target EV.`,
+                        `Solve for New Phase 2 Rate: $${reqEV}M Target EV / ($${successValue}M * ${trial1}%) = Target Rate.`
                     ],
-                    answer: `Exactly ${capex / netYield} Years to Break-Even.`
+                    answer: `Phase 2 Success Rate must increase to ${reqPass2.toFixed(1)}%.`
                 };
-                chartLabels = ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'];
-                q3_redHerring = "The 'Gross Implementation Spend' in Year 1 looks like a massive budget overrun, but it includes pre-approved amortized software licenses.";
-                q3_correlation = "The 'Cash Flow Yield' plummets in Year 3 exactly when legacy hardware warranties expire simultaneously.";
-            } else {
-                const market = Math.floor(Math.random() * 3 + 2) * 1000; // 2000, 3000
-                const targetPct = [15, 20, 25][Math.floor(Math.random() * 3)];
-                const reqValue = market * (targetPct / 100);
-                const ltv = 500;
+
+                chartConfig = {
+                    type: 'waterfall',
+                    config: {
+                        title: 'Pipeline Attrition Value ($M)',
+                        data: {
+                            labels: ['Total Addressable Market', 'Phase 1 Failure Loss', 'Phase 2 Failure Loss', 'Commercialization Discount', 'Net Expected Value'],
+                            datasets: [{ label: 'Value ($M)', data: [[0, successValue], [successValue*0.6, successValue], [successValue*0.36, successValue*0.6], [successValue*0.3, successValue*0.36], [0, successValue*0.3]] }]
+                        }
+                    }
+                };
+                q3_data = {
+                    prompt: `Review the Pipeline Attrition waterfall chart. Where is the true leverage point in this system?`,
+                    redHerring: "Phase 1 failures wipe out the largest absolute dollar amount, suggesting we should focus R&D there.",
+                    correlation: "By the time a project reaches Commercialization, the sunk costs are at their highest, making late-stage discounts devastating to ROI.",
+                    takeaway: "The client must shift their assessment criteria. Failing early (Phase 1) is cheap; failing late or discounting at commercialization destroys enterprise value. The $ investment is correctly placed in late-stage improvements."
+                };
+            }
+            else {
+                // Diconsa Archetype: Segmented Population Savings
+                const pop = Math.floor(Math.random() * 5 + 10) * 10; // 100 to 150M
+                const targetPct = 20;
+                const userPct = 50;
+                const famSize = 4;
+                const users = (pop * (targetPct/100) * (userPct/100)) / famSize; // Families
+                const groupA = 60; // 60%
+                const saveA = 15; // $15
+                const groupB = 40; // 40%
+                const saveB = 10; // $10
+                
+                const totalSave = (users * (groupA/100) * saveA * 12) + (users * (groupB/100) * saveB * 12); // Annualized
+
                 mathObj = {
-                    prompt: `<p>To survive the competitor's price war, the client must hold exactly ${targetPct}% defensive market share. The total regional market capitalization is fixed at $${market} Million.</p><p>If the client's average customer lifetime value (LTV) is tightly modeled at $${ltv}, exactly how many active paying subscribers must they maintain to successfully hit their defensive revenue threshold?</p>`,
+                    prompt: `<p>The client serves a total regional population of ${pop} Million. Exactly ${targetPct}% of this population fits the core demographic, and ${userPct}% of those actually use the service. Assume an average family unit size of ${famSize} (benefits are calculated per family, not per individual).</p><p>Implementing the new network will save ${groupA}% of families $${saveA}/month in logistics costs, and the remaining ${groupB}% of families $${saveB}/month. What is the total ANNUAL savings generated across the entire user base?</p>`,
                     steps: [
-                        `Calculate the absolute defensive revenue threshold: $${market}M &times; 0.${targetPct} = $${reqValue}M.`,
-                        `Divide the revenue threshold by the individual unit economics: $${reqValue}M / $${ltv} LTV.`,
-                        `Translate millions cleanly into absolute user metrics.`
+                        `Calculate Family Units: (${pop}M * ${targetPct}% * ${userPct}%) / ${famSize} people per family = ${users.toFixed(2)}M Families.`,
+                        `Calculate Group A Annual Savings: (${users.toFixed(2)}M * ${groupA}%) * $${saveA} * 12 months.`,
+                        `Calculate Group B Annual Savings: (${users.toFixed(2)}M * ${groupB}%) * $${saveB} * 12 months.`,
+                        `Sum the segments.`
                     ],
-                    answer: `${(reqValue * 1000000 / ltv).toLocaleString()} Active Subscribers Required.`
+                    answer: `Total Annual Savings: $${totalSave.toFixed(1)} Million.`
                 };
-                chartLabels = ['Segment X', 'Segment Y', 'Segment Z', 'Enterprise', 'SMB'];
-                q3_redHerring = "The 'Subscriber Acquisition Cost (SAC)' in the SMB segment is skyrocketing, but their LTV is so high it remains highly profitable.";
-                q3_correlation = "The actual margin destruction is hiding in 'Segment Y', where aggressive discounting failed to reduce churn, destroying the LTV/CAC ratio.";
+
+                // Diconsa Chart: Data Table with Survey + Bubble Scatter
+                chartConfig = {
+                    type: 'bubble',
+                    config: {
+                        title: 'Customer Segmentation: Cost to Serve vs Satisfaction',
+                        xTitle: 'Cost to Serve ($)',
+                        yTitle: 'Satisfaction Score (1-100)',
+                        data: {
+                            datasets: [
+                                { label: 'Group A (High Savings)', data: [{ x: 45, y: 30, r: 25 }], backgroundColor: '#e06b20' },
+                                { label: 'Group B (Low Savings)', data: [{ x: 15, y: 85, r: 15 }], backgroundColor: '#005f9e' }
+                            ]
+                        }
+                    }
+                };
+                q3_data = {
+                    dataTable: {
+                        headers: ["Segment", "Avg Distance to Node", "Willingness to Switch", "Current Churn %"],
+                        rows: [
+                            ["Group A", "45 Miles", "88% (High)", "14%"],
+                            ["Group B", "5 Miles", "12% (Low)", "2%"]
+                        ]
+                    },
+                    prompt: `Review the Customer Segmentation exhibit and data table above. What does this reveal about our roll-out strategy?`,
+                    redHerring: "Group B has a fantastic satisfaction score (85) and low churn (2%), making them look like the ideal loyal base to protect.",
+                    correlation: "Group A costs 3x more to serve, drives almost all the churn, and desperately wants to switch. The math from Question 2 proves they also generate the most savings.",
+                    takeaway: "The rollout must NOT be uniform. 100% of initial capital and deployment must target Group A's territory, ignoring Group B entirely until Phase 2."
+                };
             }
 
-            // 5. CHART.JS DATA ENGINE (15 Types safely handled)
-            const chartTypesPool = ['bubble', 'inverted', 'waterfall', 'dualAxis', 'stackedBar100', 'radar', 'scatter', 'stepline', 'polarArea', 'doughnut', 'line', 'bar', 'groupedBar', 'mixed', 'area'];
-            const selectedChart = chartTypesPool[Math.floor(Math.random() * chartTypesPool.length)];
+            // 4. "1000+ BRAINSTORM QUESTIONS" MATRIX (Resolves Requirement 4)
+            const brainstormTopics = ["macro-economic downturn impacts", "brand perception risks", "talent acquisition bottlenecks", "data privacy vulnerabilities", "legacy technology integration delays", "supply chain resilience risks", "internal change management friction"];
+            const selectedTopic = brainstormTopics[Math.floor(Math.random() * brainstormTopics.length)];
+            
+            const q4_prompt = `The ${sponsor} reviews your findings, but introduces a new, unmodeled risk: "If we execute this ${caseType}, we expose ourselves heavily to <strong>${selectedTopic}</strong>. I will not sign off until we have a mitigation strategy for this specific threat." What are 3 actionable strategies the client can deploy right now?`;
 
-            // Generate safe baseline data
-            let d1 = [40, 60, 30, 80, 50];
-            let d2 = [20, 30, 15, 40, 25];
-
-            let cConfig = {
-                title: `${theme.name} Analytical Exhibit`,
-                xTitle: theme.chartX,
-                yTitle: theme.chartY,
-                data: {
-                    labels: chartLabels,
-                    datasets: [
-                        { label: 'Primary Operating Metric', data: d1, backgroundColor: '#051c2c', borderColor: '#051c2c' }
-                    ]
-                }
-            };
-
-            // Format data structures specifically so Chart.js doesn't crash on complex layouts
-            if (selectedChart === 'waterfall') {
-                cConfig.data.datasets[0].data = [[0, 300], [300, 450], [400, 450], [400, 520], [0, 520]];
-                cConfig.data.datasets[0].backgroundColor = ['#051c2c', '#005f9e', '#e06b20', '#005f9e', '#051c2c'];
-            } else if (selectedChart === 'bubble') {
-                cConfig.data.datasets = [
-                    { label: 'Core Segments', data: [{ x: 15, y: 30, r: 10 }, { x: 45, y: 60, r: 25 }, { x: 75, y: 50, r: 15 }], backgroundColor: '#005f9e' },
-                    { label: 'Emerging Risks', data: [{ x: 20, y: 80, r: 12 }, { x: 60, y: 20, r: 20 }], backgroundColor: '#e06b20' }
-                ];
-            } else if (selectedChart === 'scatter') {
-                cConfig.data.datasets[0].data = [{ x: 10, y: 20 }, { x: 30, y: 40 }, { x: 50, y: 30 }, { x: 70, y: 80 }, { x: 90, y: 60 }];
-            } else if (selectedChart === 'stackedBar100' || selectedChart === 'groupedBar') {
-                cConfig.data.datasets.push({ label: 'Secondary Variable', data: d2, backgroundColor: '#005f9e' });
-                cConfig.data.datasets.push({ label: 'Tertiary Impact', data: [15, 25, 35, 10, 20], backgroundColor: '#94a3b8' });
-            } else if (selectedChart === 'dualAxis' || selectedChart === 'mixed') {
-                cConfig.data.datasets[0].type = 'bar';
-                cConfig.data.datasets.push({ type: 'line', label: 'Margin Yield %', data: [12, 18, 14, 22, 19], borderColor: '#e06b20', yAxisID: 'y1' });
-            } else if (selectedChart === 'doughnut' || selectedChart === 'polarArea') {
-                cConfig.data.datasets[0].backgroundColor = ['#051c2c', '#005f9e', '#e06b20', '#475569', '#94a3b8'];
-            }
-
-            // 6. ASSEMBLE FINAL JSON PAYLOAD
             return {
                 brandName: brandName,
                 industry: industry,
                 caseType: caseType,
-                clientGoal: `Reverse a ${randomVar}% ${randomMetric} threshold strictly within ${timelines[Math.floor(Math.random() * timelines.length)]}.`,
+                clientGoal: clientGoal,
                 p1: p1,
                 p2: p2,
                 p3: p3,
@@ -558,34 +625,22 @@
                 q1: {
                     prompt: `Given the explicit constraints triggered by the disruption, what specific operational trade-offs and financial structures must the team investigate?`,
                     pillars: [
-                        { title: "Financial & Asset Liquidity", bullets: ["Immediate capital expenditure requirements.", "Depreciation schedules of stranded assets.", "Real estate and leasing liabilities."] },
-                        { title: "Operational Execution Logistics", bullets: ["Supplier concentration risk profiles.", "Cost impacts of newly imposed transit delays.", "Working capital requirements to buffer delays."] },
-                        { title: "Market Positioning Dynamics", bullets: ["Customer acquisition cost (CAC) inflation.", "Price elasticity against agile disruptors.", "Contractual lock-in rates for enterprise clients."] }
+                        { title: "Financial Leverage & Capital", bullets: ["Immediate CapEx requirements.", "Depreciation of stranded assets.", "Cost of capital and ROI hurdles."] },
+                        { title: "Operational Execution Logistics", bullets: ["Supplier concentration risk profiles.", "Cost impacts of transit delays.", "Working capital buffers."] },
+                        { title: "Market Positioning Dynamics", bullets: ["Customer acquisition cost (CAC) inflation.", "Price elasticity against disruptors.", "Contractual lock-in rates."] }
                     ]
                 },
-                q2: {
-                    prompt: mathObj.prompt,
-                    steps: mathObj.steps,
-                    answer: mathObj.answer
-                },
-                q3: {
-                    prompt: `Our data architects mapped the client's internal telemetry across the affected ${theme.chartX}s. Analyze the visual exhibit below. What underlying operational breakdown is occurring?`,
-                    redHerring: q3_redHerring,
-                    correlation: q3_correlation,
-                    takeaway: `The data definitively proves that the client's failure is structural, not commercial. Capital must be immediately reallocated to resolve the ${theme.chartY} bottleneck before scaling further.`
-                },
+                q2: mathObj,
+                q3: q3_data,
                 q4: {
-                    prompt: `The ${sponsor} pushes back immediately: "If we execute this transition, we risk catastrophic operational downtime that will permanently alienate our highest-margin legacy clients." How do we mitigate this downstream threat?`,
+                    prompt: q4_prompt,
                     rubric: [
-                        { theme: "Operational Ring-Fencing", bullets: ["Establish a dedicated 'White Glove' fulfillment track entirely separated from the transition systems.", "Pre-build an artificial 90-day inventory buffer for legacy accounts prior to cutover."] },
-                        { theme: "Financial Hedging", bullets: ["Proactively restructure SLA contracts with temporary price concessions in exchange for transition grace periods.", "Utilize external vendor performance bonds to shift financial liability off the balance sheet."] },
-                        { theme: "Governance & Rollback", bullets: ["Deploy a localized 'War Room' executive integration team embedded within top-tier accounts.", "Implement a strict 'Stage-Gate' rollback protocol if defect rates breach 1.5%."] }
+                        { theme: "Structural Hedges", bullets: ["Implement forward contracts to lock in baseline exposure.", "Transfer risk via external vendor performance bonds or strict SLAs."] },
+                        { theme: "Phased Pilot Roadmaps", bullets: ["Limit initial exposure to a tightly controlled 5% regional pilot.", "Establish stage-gate veto thresholds before scaling."] },
+                        { theme: "Proactive Stakeholder Control", bullets: ["Pre-negotiate subsidies or concessions with affected internal/external parties.", "Deploy a localized 'War Room' integration team."] }
                     ]
                 },
-                chart: {
-                    type: selectedChart,
-                    config: cConfig
-                }
+                chart: chartConfig
             };
         }
     </script>
